@@ -1,5 +1,5 @@
 # simple_pleer_OpenNi
-OpenCV - https://github.com/Khanzo/OpenNI2player/releases/download/win_64/OpenCV2.zip
+OpenCV - https://github.com/Khanzo/OpenNI2player/releases/download/win_64/OpenCV2.zip\n
 OpenNI2 - https://structure.io/openni
 pip install numpy
 pip install PyQt5
