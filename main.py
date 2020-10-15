@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 import sys
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import QBasicTimer
 import tools
 import imagewindow
+
 
 class MainWindow(QtWidgets.QMainWindow):
     
@@ -33,8 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.btnPlay.clicked.connect(self.player)
         self.btnPlay.move(130, 30)
         
-        self.btnR = QtWidgets.QPushButton('===>', self)
-        self.btnL = QtWidgets.QPushButton('<===', self)
+        self.btnR = QtWidgets.QPushButton('>', self)
+        self.btnL = QtWidgets.QPushButton('<', self)
         self.btnR.move(230, 30)
         self.btnL.move(30, 30)
 
@@ -55,7 +57,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.window1 = imagewindow.ImageWindow(0)
         self.window2 = imagewindow.ImageWindow(1)
         
-        
     def closeEvent(self,event):
         #диалог выхода
         result = QtWidgets.QMessageBox.question(self,
@@ -70,14 +71,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def stepFrame(self):
         #функционал перемотки
         if len(self.frColor)<1:
-            return
+            return 
         
         sender = self.sender()
         if sender.text() == '>':
             self.play()
+            self.slider.setValue(self.tick)
         else:
-            self.tick -= 2
-            self.play()
+            if self.tick != 1:
+                self.tick -= 2
+                self.play()
+                self.slider.setValue(self.tick)
             
     def tickPosition(self):
         self.slider.setValue(self.tick)
@@ -99,8 +103,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.timer.stop()
             self.btnPlay.setText('Play')
         else:
-            if self.tick >= len(self.frColor)-1:
-                self.tick = 0
             self.timer.start(28, self)            
             self.slider.setRange(0, len(self.frColor))
             #шаг слайдера
@@ -108,7 +110,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 step = int(self.slider.maximum()/self.slider.width())
                 self.slider.setPageStep(step)                
             self.btnPlay.setText('Stop')
-
     
     def fileDialog(self):  
         #сброс
@@ -121,9 +122,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slider.setValue(self.tick)
         #выбор файла
         fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', '*.oni')[0]
-        if fileName != '':
+        if fileName != '':            
             splash = QtWidgets.QSplashScreen(QtGui.QPixmap("loading.jpg"))
-            splash.showMessage("Frames load ",QtCore.Qt.AlignHCenter|
+            splash.showMessage("Загрузка фрейма ",QtCore.Qt.AlignHCenter|
                     QtCore.Qt.AlignBottom, QtCore.Qt.black)
             splash.show()
             self.hide()
@@ -134,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.play()
             
     def play(self):
-        #проигрывание фреймов
+        # проигрывание фреймов
         if len(self.frColor)<1:
             return
         
@@ -152,6 +153,8 @@ class MainWindow(QtWidgets.QMainWindow):
         bytesPerLine = 3*640
         
         cImg = QtGui.QImage(image.data, image.width, image.height, bytesPerLine, QtGui.QImage.Format_RGB888)
+        
+        #ddImg = QtGui.QImage(depth.data, depth.width, depth.height, bytesPerLine, QtGui.QImage.Format_Indexed8)
                 
         dImg = tools.NP2QI(depth)   #преобразование nparray to QImage     
         
@@ -159,10 +162,12 @@ class MainWindow(QtWidgets.QMainWindow):
         pixmap02 = QtGui.QPixmap.fromImage(dImg)
         pixmap02z = pixmap02.scaled(dImg.width(), dImg.height()*2)
         
+        #pixmap02z = QtGui.QPixmap.fromImage(ddImg)
+        
         #показ окон с изображениями
         if self.tick == 0:
-            self.window1.setGeometry(pixmap02z.width()/2+440, 400, pixmap01.width(), pixmap01.height())
-            self.window2.setGeometry(430, 400, pixmap02z.width(), pixmap02z.height())
+            self.window1.setGeometry(pixmap02z.width()/2+40, 200, pixmap01.width(), pixmap01.height())
+            self.window2.setGeometry(30, 200, pixmap02z.width()/2, pixmap02z.height()/2)
         
         self.window2.loadpixmap(pixmap02z,self.tick)
         self.window1.loadpixmap(pixmap01,self.tick)
@@ -171,6 +176,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.window2.show()
         
         self.tick += 1
+
 
 def run():
     app = QtWidgets.QApplication(sys.argv)
