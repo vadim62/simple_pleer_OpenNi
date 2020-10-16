@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import QBasicTimer
@@ -96,6 +95,8 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def player(self):
         #кнопка play
+        fps = 35 # кол-во кадров в секунду
+        msec = 1000 / fps # задержка между показами кадров
         if len(self.frColor)<1:
             return
         
@@ -103,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.timer.stop()
             self.btnPlay.setText('Play')
         else:
-            self.timer.start(28, self)            
+            self.timer.start(msec, self)            
             self.slider.setRange(0, len(self.frColor))
             #шаг слайдера
             if self.slider.maximum() > self.slider.width():
@@ -127,11 +128,11 @@ class MainWindow(QtWidgets.QMainWindow):
             splash.showMessage("Загрузка фрейма ",QtCore.Qt.AlignHCenter|
                     QtCore.Qt.AlignBottom, QtCore.Qt.black)
             splash.show()
-            self.hide()
+            # self.hide()
             QtWidgets.qApp.processEvents()
             self.frColor, self.frDepth = tools.getFrames(str.encode(fileName),splash)
             splash.finish(self)
-            self.show()            
+            self.show()
             self.play()
             
     def play(self):
@@ -149,20 +150,17 @@ class MainWindow(QtWidgets.QMainWindow):
         s = "{0}/{1}".format(self.tick,len(self.frColor))
         self.countframe.setText(s)
         image = self.frColor[self.tick]
-        depth = self.frDepth[self.tick]        
-        bytesPerLine = 3*640
+        depth = self.frDepth[self.tick]
+        bytesPerPixel = 3 # 4 for RGBA, 3 for RGB    
+        bytesPerLine = image.width * bytesPerPixel
         
         cImg = QtGui.QImage(image.data, image.width, image.height, bytesPerLine, QtGui.QImage.Format_RGB888)
-        
-        #ddImg = QtGui.QImage(depth.data, depth.width, depth.height, bytesPerLine, QtGui.QImage.Format_Indexed8)
                 
         dImg = tools.NP2QI(depth)   #преобразование nparray to QImage     
         
         pixmap01 = QtGui.QPixmap.fromImage(cImg)
         pixmap02 = QtGui.QPixmap.fromImage(dImg)
         pixmap02z = pixmap02.scaled(dImg.width(), dImg.height()*2)
-        
-        #pixmap02z = QtGui.QPixmap.fromImage(ddImg)
         
         #показ окон с изображениями
         if self.tick == 0:
